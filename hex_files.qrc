@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>hexfiles/1986ve1bootuart.hex</file>
+    </qresource>
+</RCC>
