@@ -378,16 +378,17 @@ void UartLoaderWorker::slotEraseFlash()
           return;
         }
 
-      quint32 address =
-          static_cast<quint32>(readBuf.at(1)) +
-          static_cast<quint32>(readBuf.at(2) << 8) +
-          static_cast<quint32>(readBuf.at(3) << 16) +
-          static_cast<quint32>(readBuf.at(4) << 24);
-      quint32 data =
-          static_cast<quint32>(readBuf.at(5)) +
-          static_cast<quint32>(readBuf.at(6) << 8) +
-          static_cast<quint32>(readBuf.at(7) << 16) +
-          static_cast<quint32>(readBuf.at(8) << 24);
+      quint32 address = static_cast<quint32> (
+          (static_cast<quint8>(readBuf.at(1))) +
+          (static_cast<quint8>(readBuf.at(2)) << 8) +
+          (static_cast<quint8>(readBuf.at(3)) << 16) +
+          (static_cast<quint8>(readBuf.at(4)) << 24));
+      quint32 data = static_cast<quint32> (
+          (static_cast<quint8>(readBuf.at(5))) +
+          (static_cast<quint8>(readBuf.at(6)) << 8) +
+          (static_cast<quint8>(readBuf.at(7)) << 16) +
+          (static_cast<quint8>(readBuf.at(8)) << 24));
+
       if ((address == 0x000020000) && (data == 0xffffffff))
         {
           qDebug() << "Full chip erase done!";
