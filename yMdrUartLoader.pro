@@ -1,6 +1,7 @@
 QT += quick
 QT += quickcontrols2
 QT += serialport
+QT += widgets
 
 TARGET = yMdrUartLoader
 
@@ -19,7 +20,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp \
     uartloader.cpp \
-    uartloaderworker.cpp
+    uartloaderworker.cpp \
+    fileiohelper.cpp
 
 RESOURCES += qml.qrc \
     hex_files.qrc \
@@ -38,7 +40,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     uartloader.h \
-    uartloaderworker.h
+    uartloaderworker.h \
+    fileiohelper.h
 
 DISTFILES += \
     README.md \

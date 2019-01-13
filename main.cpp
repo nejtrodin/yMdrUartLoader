@@ -1,4 +1,6 @@
-#include <QGuiApplication>
+//#include <QGuiApplication>
+#include <QApplication>
+#include <QQmlApplicationEngine>
 #include <QQuickItem>
 #include <QQuickView>
 #include <QQmlEngine>
@@ -7,20 +9,26 @@
 #include <QDebug>
 
 #include "uartloader.h"
+#include "fileiohelper.h"
 
 
 int main(int argc, char *argv[])
 {
-  QGuiApplication app(argc, argv);
+  QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
+//  QGuiApplication app(argc, argv);  // for qml dialogs
+  QApplication app(argc, argv);  // for native file dialogs
+
   app.setWindowIcon(QIcon("://images/yMdrUartLoader-48x48.png"));
   qmlRegisterType<UartLoader>("com.mycompany.loader", 1, 0, "UartLoader");
 
   UartLoader *loader = new UartLoader;
-  QQuickView view;
-  view.engine()->rootContext()->setContextProperty("loader", loader);
-  view.setSource(QUrl(QLatin1String("qrc:/main.qml")));
-  view.setResizeMode(QQuickView::SizeRootObjectToView);
+  FileIoHelper *fileIoHelper = new FileIoHelper;
 
-  view.show();
+  QQmlApplicationEngine engine;
+  engine.rootContext()->setContextProperty("loader", loader);
+  engine.rootContext()->setContextProperty("fileIoHelper", fileIoHelper);
+  engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+
   return app.exec();
 }

@@ -1,13 +1,16 @@
-import QtQuick 2.7
+import QtQuick 2.6
+import QtQuick.Window 2.2
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
-import QtQuick.Dialogs 1.2
+//import QtQuick.Dialogs 1.2
+import Qt.labs.platform 1.0
 import com.mycompany.loader 1.0
 import Qt.labs.settings 1.0
 
 
-Item {
-    id: mainItem
+Window {
+    visible: true
+    id: mainWindow
     width: 600
     height: 700
 
@@ -19,7 +22,7 @@ Item {
     Timer {
         id: scanDeviceTimer
         interval: 1000; running: true; repeat: true
-        onTriggered: mainItem.checkPorts()
+        onTriggered: mainWindow.checkPorts()
     }
 
     Settings {
@@ -205,7 +208,7 @@ Item {
         runCodeCheckBox.enabled = false
         portNameComboBox.enabled = false
         portBaudComboBox.enabled = false
-        mainItem.clearButtonColor()
+        mainWindow.clearButtonColor()
         loader.setPortSettings(portNameComboBox.currentText,
                                portBaudItems.get(portBaudComboBox.currentIndex).value)
         if (getRevCheckBox.checked) {
@@ -258,6 +261,7 @@ Item {
             TextField {
                 id: pathEdit
                 text: settings.codePath
+                selectByMouse: true
                 Layout.fillWidth: true
             }
             Button {
@@ -307,7 +311,7 @@ Item {
                     if (!startFlag) {
                         logTextArea.append(Qt.formatDateTime(new Date(), "* hh:mm:ss") +
                                            " - Get revision");
-                        mainItem.clearButtonColor()
+                        mainWindow.clearButtonColor()
                         getRevButton.backColor = buttonActiveColor
                         loader.setPortSettings(portNameComboBox.currentText,
                                                portBaudItems.get(portBaudComboBox.currentIndex).value)
@@ -338,11 +342,11 @@ Item {
                 property color backColor: buttonDefaultColor
                 text: qsTr("Write Bootloader")
                 Layout.fillWidth: true
-                onClicked: {                                        
+                onClicked: {
                     if (!startFlag) {
                         logTextArea.append(Qt.formatDateTime(new Date(), "* hh:mm:ss") +
                                            " - Write Bootloader");
-                        mainItem.clearButtonColor()
+                        mainWindow.clearButtonColor()
                         writeLoaderButton.backColor = buttonActiveColor
                         loader.setPortSettings(portNameComboBox.currentText,
                                                portBaudItems.get(portBaudComboBox.currentIndex).value)
@@ -373,11 +377,11 @@ Item {
                 property color backColor: buttonDefaultColor
                 text: qsTr("Erase flash")
                 Layout.fillWidth: true
-                onClicked: {                    
+                onClicked: {
                     if (!startFlag) {
                         logTextArea.append(Qt.formatDateTime(new Date(), "* hh:mm:ss") +
                                                              " - Erase flash");
-                        mainItem.clearButtonColor()
+                        mainWindow.clearButtonColor()
                         eraseButton.backColor = buttonActiveColor
                         loader.setPortSettings(portNameComboBox.currentText,
                                                portBaudItems.get(portBaudComboBox.currentIndex).value)
@@ -416,7 +420,7 @@ Item {
                             logTextArea.append(qsTr("Path to file is empty"))
                             return
                         }
-                        mainItem.clearButtonColor()
+                        mainWindow.clearButtonColor()
                         writeCodeButton.backColor = buttonActiveColor
                         loader.setPortSettings(portNameComboBox.currentText,
                                                portBaudItems.get(portBaudComboBox.currentIndex).value)
@@ -454,7 +458,7 @@ Item {
                             logTextArea.append(qsTr("Path to file is empty"))
                             return
                         }
-                        mainItem.clearButtonColor()
+                        mainWindow.clearButtonColor()
                         verifyButton.backColor = buttonActiveColor
                         loader.setPortSettings(portNameComboBox.currentText,
                                                portBaudItems.get(portBaudComboBox.currentIndex).value)
@@ -488,7 +492,7 @@ Item {
                     if (!startFlag) {
                         logTextArea.append(Qt.formatDateTime(new Date(), "* hh:mm:ss") +
                                            " - Run MCU");
-                        mainItem.clearButtonColor()
+                        mainWindow.clearButtonColor()
                         runCodeButton.backColor = buttonActiveColor
                         loader.setPortSettings(portNameComboBox.currentText,
                                                portBaudItems.get(portBaudComboBox.currentIndex).value)
@@ -512,7 +516,7 @@ Item {
             id: startButton
             property color backColor: buttonDefaultColor
             text: qsTr("Start")
-            Layout.fillWidth: true            
+            Layout.fillWidth: true
             onClicked: {
                 logTextArea.append(Qt.formatDateTime(new Date(), "* hh:mm:ss") +
                                    " - Start");
@@ -522,7 +526,7 @@ Item {
                     logTextArea.append(qsTr("Path to file is empty"))
                     return
                 }
-                mainItem.startButtonClicked()
+                mainWindow.startButtonClicked()
             }
 
             background: Rectangle {
@@ -535,31 +539,80 @@ Item {
             }
         }
 
-        ScrollView {
-            TextArea {
-                id: logTextArea
-                placeholderText: "logs"
-                readOnly: true
+        RowLayout {
+            ScrollView {
+                TextArea {
+                    id: logTextArea
+                    readOnly: true
+                    selectByMouse: true
+                    selectByKeyboard: true
+                }
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.rowSpan: 2
             }
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+
+            ColumnLayout {
+                ToolButton {
+                    id: clearLogButton
+                    icon.source: "qrc:/images/delete.svg"
+                    onClicked: logTextArea.clear()
+                }
+
+                ToolButton {
+                    id: saveLogButton
+                    icon.source: "qrc:/images/save.svg"
+                    onClicked: saveLogDialog.open()
+                }
+            }
         }
 
         anchors.fill: parent
     }  // ColumnLayout - main Layout
 
+    // QML File Dialogs
+//    FileDialog {
+//        id: openDialog
+//        title: qsTr("Please choose a hex file")
+//        folder: shortcuts.home
+//        nameFilters: [ "Hex files (*.hex)", "All files (*)" ]
+//        selectMultiple: false
+//        selectExisting: true
+//        onAccepted: {
+//            pathEdit.text = openDialog.fileUrl.toString().replace("file://", "")
+//        }
+//        onRejected: {
+//            console.log("Canceled")
+//        }
+//    }
+
+    // Native File Dialogs
     FileDialog {
         id: openDialog
-        title: qsTr("Please choose a hex file")
         folder: shortcuts.home
-        nameFilters: [ "Hex files (*.hex)", "All files (*)" ]
-        selectMultiple: false
-        selectExisting: true
+        title: qsTr("Please choose a hex file")
+        fileMode: FileDialog.OpenFile
+        nameFilters: [ qsTr("Hex files (*.hex)"), qsTr("All files (*)")]
+
         onAccepted: {
-            pathEdit.text = openDialog.fileUrl.toString().replace("file://", "")
-        }
-        onRejected: {
-            console.log("Canceled")
+            pathEdit.text = openDialog.file.toString().replace("file://", "")
         }
     }
+
+    FileDialog {
+        id: saveLogDialog
+        title: qsTr("Please choose a log file")
+        fileMode: FileDialog.SaveFile
+        defaultSuffix: "log"
+        nameFilters: [qsTr("Log files (*.log)"), qsTr("All files (*.*)")]
+
+        onAccepted: {
+            if (saveLogDialog.file != "") {
+                fileIoHelper.writeTextFile(saveLogDialog.file.toString().replace("file://", ""),
+                                           logTextArea.text);
+            }
+        }
+    }
+
+
 }
