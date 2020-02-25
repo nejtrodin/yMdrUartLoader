@@ -751,7 +751,7 @@ bool UartLoaderWorker::loadHexCode(QString path)
 
       cSum = static_cast<quint8>(bLength + (offset >> 8) + (offset & 0xff) + noteType);
 
-      if (bLength > (data.size() - 13))
+      if (bLength > (data.size() - 11))
         {
           m_lastError = tr("File corrupt. Line so short");
           file.close();
@@ -902,7 +902,7 @@ bool UartLoaderWorker::loadHexLoader(QString path)
 
       cSum = static_cast<quint8>(bLength + (offset >> 8) + (offset & 0xff) + noteType);
 
-      if (bLength > (data.size() - 13))
+      if (bLength > (data.size() - 11))
         {
           m_lastError = tr("File corrupt. Line so short");
           file.close();
