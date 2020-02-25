@@ -31,10 +31,13 @@ private:
     static const int ram2StartAddress = 0x20100000;
     static const int flash1Size = 128*1024;
     static const int flash1StartAddress = 0x00000000;
+    static const int flash2Size = 128*1024;
+    static const int flash2StartAddress = 0x08000000;
 
     quint8 m_ram1Buf[ram1Size];
     quint8 m_ram2Buf[ram2Size];
     quint8 m_flash1Buf[flash1Size];
+    quint8 m_flash2Buf[flash2Size];
 
 };
 

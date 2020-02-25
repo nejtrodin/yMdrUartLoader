@@ -3,11 +3,20 @@
 
 #include "mcumemorysingleton.h"
 
+// converter between int quint32 and char[4]
+union TypeConverter {
+    int i;
+    quint32 ui32;
+    char ch[4];
+};
+
+
 QSerialPort::QSerialPort(QObject *parent) :
     QObject(parent)
 {
     m_portOpened = false;
     m_mcuMode = BareWaitMode;
+    m_mcuType = Type1986VE1T;
 }
 
 void QSerialPort::setPortName(QString portName)
@@ -45,6 +54,8 @@ bool QSerialPort::flush()
 
 qint64 QSerialPort::write(const QByteArray &data)
 {       
+    TypeConverter typeConverter;
+
     if (m_mcuMode == BareWaitMode)
     {
         // sync
@@ -84,14 +95,18 @@ qint64 QSerialPort::write(const QByteArray &data)
         else if (data.size() >= 9 && data.at(0) == 'Y')
         {
             m_answerData.append('Y');
-            quint32 address = static_cast<quint32>(data.at(1)) & 0xff;
-            address |= (static_cast<quint32>(data.at(2)) & 0xff) << 8;
-            address |= (static_cast<quint32>(data.at(3)) & 0xff) << 16;
-            address |= (static_cast<quint32>(data.at(4)) & 0xff) << 24;
-            int length = static_cast<int>(data.at(5)) +
-                    (static_cast<int>(data.at(6)) << 8) +
-                    (static_cast<int>(data.at(7)) << 16) +
-                    (static_cast<int>(data.at(8)) << 24);
+            typeConverter.ch[0] = data.at(1);
+            typeConverter.ch[1] = data.at(2);
+            typeConverter.ch[2] = data.at(3);
+            typeConverter.ch[3] = data.at(4);
+            quint32 address = typeConverter.ui32;
+
+            typeConverter.ch[0] = data.at(5);
+            typeConverter.ch[1] = data.at(6);
+            typeConverter.ch[2] = data.at(7);
+            typeConverter.ch[3] = data.at(8);
+            int length = typeConverter.i;
+
             McuMemorySingleton* mcuMemory = McuMemorySingleton::instance();
             QByteArray readData = mcuMemory->read(address, length);
             m_answerData.append(readData);
@@ -112,25 +127,33 @@ qint64 QSerialPort::write(const QByteArray &data)
 
         if (m_inputCache.size() >= 9 && m_inputCache.at(0) == 'L')
         {
-            quint32 address = static_cast<quint32>(m_inputCache.at(1)) & 0xff;
-            address |= (static_cast<quint32>(m_inputCache.at(2)) & 0xff) << 8;
-            address |= (static_cast<quint32>(m_inputCache.at(3)) & 0xff) << 16;
-            address |= (static_cast<quint32>(m_inputCache.at(4)) & 0xff) << 24;
-            int length = static_cast<int>(m_inputCache.at(5)) +
-                   (static_cast<int>(m_inputCache.at(6)) << 8) +
-                   (static_cast<int>(m_inputCache.at(7)) << 16) +
-                   (static_cast<int>(m_inputCache.at(8)) << 24);
+            typeConverter.ch[0] = m_inputCache.at(1);
+            typeConverter.ch[1] = m_inputCache.at(2);
+            typeConverter.ch[2] = m_inputCache.at(3);
+            typeConverter.ch[3] = m_inputCache.at(4);
+            quint32 address = typeConverter.ui32;
 
-           if (m_inputCache.size() >= (9 + length))
-           {
-               McuMemorySingleton* mcuMemory = McuMemorySingleton::instance();
-               QByteArray binData = m_inputCache.mid(9, length);
-               mcuMemory->write(address, binData);
+            typeConverter.ch[0] = m_inputCache.at(5);
+            typeConverter.ch[1] = m_inputCache.at(6);
+            typeConverter.ch[2] = m_inputCache.at(7);
+            typeConverter.ch[3] = m_inputCache.at(8);
+            int length = typeConverter.i;
 
-               m_answerData.append('K');
-               m_mcuMode = BareWaitMode;
-               m_inputCache.clear();
-           }
+            if (m_inputCache.size() >= (9 + length))
+            {
+                McuMemorySingleton* mcuMemory = McuMemorySingleton::instance();
+                QByteArray binData = m_inputCache.mid(9, length);
+                mcuMemory->write(address, binData);
+
+                m_answerData.append('K');
+                m_mcuMode = BareWaitMode;
+                m_inputCache.clear();
+            }
+
+            if (address == 0x20103400)
+                m_mcuType = Type1986VE1T;
+            else if (address == 0x20007800)
+                m_mcuType = Type1986VE9x;
         }
     }
 
@@ -145,10 +168,20 @@ qint64 QSerialPort::write(const QByteArray &data)
         {
             m_answerData.append('E');
             // address
-            m_answerData.append(static_cast<char>(0x00));
-            m_answerData.append(static_cast<char>(0x00));
-            m_answerData.append(static_cast<char>(0x02));
-            m_answerData.append(static_cast<char>(0x00));
+            if (m_mcuType == Type1986VE1T)
+            {
+                m_answerData.append(static_cast<char>(0x00));
+                m_answerData.append(static_cast<char>(0x00));
+                m_answerData.append(static_cast<char>(0x02));
+                m_answerData.append(static_cast<char>(0x00));
+            }
+            else if (m_mcuType == Type1986VE9x)
+            {
+                m_answerData.append(static_cast<char>(0x00));
+                m_answerData.append(static_cast<char>(0x00));
+                m_answerData.append(static_cast<char>(0x02));
+                m_answerData.append(static_cast<char>(0x08));
+            }
             // data
             m_answerData.append(static_cast<char>(0xff));
             m_answerData.append(static_cast<char>(0xff));
@@ -158,11 +191,13 @@ qint64 QSerialPort::write(const QByteArray &data)
 
         else if (data.size() >= 5 && data.at(0) == 'A')
         {
-            currentAddress = (static_cast<quint32>(data.at(1)) & 0xff) |
-                    ((static_cast<quint32>(data.at(2)) & 0xff) << 8) |
-                    ((static_cast<quint32>(data.at(3)) & 0xff) << 16) |
-                    ((static_cast<quint32>(data.at(4)) & 0xff) << 24);
-            m_answerData.append(static_cast<char>(0x00));
+            typeConverter.ch[0] = data.at(1);
+            typeConverter.ch[1] = data.at(2);
+            typeConverter.ch[2] = data.at(3);
+            typeConverter.ch[3] = data.at(4);
+            currentAddress = typeConverter.ui32;
+
+            m_answerData.append(data.at(1) + data.at(2) + data.at(3) + data.at(4));
         }
 
         else if (data.size() >= 257 && data.at(0) == 'P')

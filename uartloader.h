@@ -12,7 +12,7 @@ public:
   UartLoader(QObject *parent = Q_NULLPTR);
 
   // function called from qml
-  Q_INVOKABLE void setPortSettings(QString portName, qint32 baud);
+  Q_INVOKABLE void setSettings(QString mcuType, QString portName, qint32 baud);
   Q_INVOKABLE void getRevision();
   Q_INVOKABLE void writeLoader();
   Q_INVOKABLE void eraseFlash();
@@ -26,7 +26,7 @@ public slots:
 
 signals:
   // for thread worker
-  void signalSetPortSettins(QString portName, qint32 baud);
+  void signalSetSettins(QString mcuType, QString portName, qint32 baud);
   void signalGetRevision();
   void signalWriteLoader();
   void signalEraseFlash();

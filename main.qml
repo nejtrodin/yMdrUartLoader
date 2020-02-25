@@ -34,6 +34,7 @@ Window {
         property bool verifyCodeFlag: true
         property bool runCodeFlag: true
         property string portName: ""
+        property int mcuTypeIndex: 0
     }
 
     Component.onDestruction: {
@@ -47,6 +48,7 @@ Window {
         var portName = portNameComboBox.currentText
         if (portName !== "")
             settings.portName = portName
+        settings.mcuTypeIndex = mcuTypeComboBox.currentIndex
     }
 
     property bool startFlag: false
@@ -209,8 +211,9 @@ Window {
         portNameComboBox.enabled = false
         portBaudComboBox.enabled = false
         mainWindow.clearButtonColor()
-        loader.setPortSettings(portNameComboBox.currentText,
-                               portBaudItems.get(portBaudComboBox.currentIndex).value)
+        loader.setSettings(mcuTypeComboBox.currentText,
+                           portNameComboBox.currentText,
+                           portBaudItems.get(portBaudComboBox.currentIndex).value)
         if (getRevCheckBox.checked) {
             getRevButton.backColor = buttonActiveColor
             loader.getRevision()
@@ -248,8 +251,9 @@ Window {
             }
             ComboBox {
                 id: mcuTypeComboBox
-                model: ["1986ВЕ1Т"]
+                model: ["1986ВЕ1Т", "1986ВЕ9x"]
                 Layout.fillWidth: true
+                currentIndex: settings.mcuTypeIndex
             }
             spacing: 10
         }
@@ -313,8 +317,9 @@ Window {
                                            " - Get revision");
                         mainWindow.clearButtonColor()
                         getRevButton.backColor = buttonActiveColor
-                        loader.setPortSettings(portNameComboBox.currentText,
-                                               portBaudItems.get(portBaudComboBox.currentIndex).value)
+                        loader.setSettings(mcuTypeComboBox.currentText,
+                                           portNameComboBox.currentText,
+                                           portBaudItems.get(portBaudComboBox.currentIndex).value)
                         loader.getRevision()
                     }
                 }
@@ -348,8 +353,9 @@ Window {
                                            " - Write Bootloader");
                         mainWindow.clearButtonColor()
                         writeLoaderButton.backColor = buttonActiveColor
-                        loader.setPortSettings(portNameComboBox.currentText,
-                                               portBaudItems.get(portBaudComboBox.currentIndex).value)
+                        loader.setSettings(mcuTypeComboBox.currentText,
+                                           portNameComboBox.currentText,
+                                           portBaudItems.get(portBaudComboBox.currentIndex).value)
                         loader.writeLoader()
                     }
                 }
@@ -383,8 +389,9 @@ Window {
                                                              " - Erase flash");
                         mainWindow.clearButtonColor()
                         eraseButton.backColor = buttonActiveColor
-                        loader.setPortSettings(portNameComboBox.currentText,
-                                               portBaudItems.get(portBaudComboBox.currentIndex).value)
+                        loader.setSettings(mcuTypeComboBox.currentText,
+                                           portNameComboBox.currentText,
+                                           portBaudItems.get(portBaudComboBox.currentIndex).value)
                         loader.eraseFlash()
                     }
                 }
@@ -422,8 +429,9 @@ Window {
                         }
                         mainWindow.clearButtonColor()
                         writeCodeButton.backColor = buttonActiveColor
-                        loader.setPortSettings(portNameComboBox.currentText,
-                                               portBaudItems.get(portBaudComboBox.currentIndex).value)
+                        loader.setSettings(mcuTypeComboBox.currentText,
+                                           portNameComboBox.currentText,
+                                           portBaudItems.get(portBaudComboBox.currentIndex).value)
                         loader.writeFlash(pathEdit.text)
                     }
                 }
@@ -460,8 +468,9 @@ Window {
                         }
                         mainWindow.clearButtonColor()
                         verifyButton.backColor = buttonActiveColor
-                        loader.setPortSettings(portNameComboBox.currentText,
-                                               portBaudItems.get(portBaudComboBox.currentIndex).value)
+                        loader.setSettings(mcuTypeComboBox.currentText,
+                                           portNameComboBox.currentText,
+                                           portBaudItems.get(portBaudComboBox.currentIndex).value)
                         loader.verifyFlash(pathEdit.text)
                     }
                 }
@@ -494,8 +503,9 @@ Window {
                                            " - Run MCU");
                         mainWindow.clearButtonColor()
                         runCodeButton.backColor = buttonActiveColor
-                        loader.setPortSettings(portNameComboBox.currentText,
-                                               portBaudItems.get(portBaudComboBox.currentIndex).value)
+                        loader.setSettings(mcuTypeComboBox.currentText,
+                                           portNameComboBox.currentText,
+                                           portBaudItems.get(portBaudComboBox.currentIndex).value)
                         loader.runMcu()
                     }
                 }

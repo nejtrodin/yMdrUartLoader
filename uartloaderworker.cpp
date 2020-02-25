@@ -18,29 +18,32 @@ UartLoaderWorker::UartLoaderWorker(QObject *parent) : QObject(parent)
   m_ramLength = 0;
   m_ramStartOffset = 0;
   mode = None;
-  mcuType = Type1986VE1T;
 
-  m_flashStartAddress = 0;
-  m_ramStartAddress = 0;
-  if (mcuType == Type1986VE1T)
-    {
-      m_flashStartAddress = MDR1T_FLASH_START_ADDRESS;
-      m_ramStartAddress = MDR1T_RAM_START_ADDRESS;
-    }
-  else if (mcuType == Type1986VE9x)
-    {
-      m_flashStartAddress = MDR9X_FLASH_START_ADDRESS;
-      m_ramStartAddress = MDR9X_RAM_START_ADDRESS;
-    }
+  mcuType = Type1986VE1T;
+  m_flashStartAddress = MDR1T_FLASH_START_ADDRESS;
+  m_ramStartAddress = MDR1T_RAM_START_ADDRESS;
 
   m_serialPort = new QSerialPort;
 }
 
-void UartLoaderWorker::slotSetPortSettings(QString portName, qint32 baud)
+void UartLoaderWorker::slotSetSettings(QString strMcuType, QString portName, qint32 baud)
 {
   qDebug() << "Set Port Settings: "  << portName << ", " << baud;
   m_portName = portName;
   m_baud = baud;
+
+  if (strMcuType.toUpper() == "1986ВЕ1Т")
+    {
+      mcuType = Type1986VE1T;
+      m_flashStartAddress = MDR1T_FLASH_START_ADDRESS;
+      m_ramStartAddress = MDR1T_RAM_START_ADDRESS;
+    }
+  else if (strMcuType.toUpper() == "1986ВЕ9X")
+    {
+      mcuType = Type1986VE9x;
+      m_flashStartAddress = MDR9X_FLASH_START_ADDRESS;
+      m_ramStartAddress = MDR9X_RAM_START_ADDRESS;
+    }
 }
 
 void UartLoaderWorker::slotGetRevision()
@@ -157,6 +160,8 @@ void UartLoaderWorker::slotWriteLoader()
       QString loaderPath;
       if (mcuType == Type1986VE1T)
         loaderPath = ":/hexfiles/1986ve1bootuart.hex";
+      else if (mcuType == Type1986VE9x)
+        loaderPath = ":/hexfiles/1986_BOOT_UART.hex";
       else
         {
           qDebug() << "Mcu Type not defined";
@@ -247,8 +252,8 @@ void UartLoaderWorker::slotWriteLoader()
           m_serialPort->flush();
 
           readBuf = readSerialData(10, 1000);
-          if (readBuf.length() == 10 ||
-              readBuf.at(0) == 'Y' ||
+          if (readBuf.length() == 10 &&
+              readBuf.at(0) == 'Y' &&
               readBuf.at(9) == 'K')
             {
               for (uint j = 0; j < 8; j++)
@@ -259,7 +264,7 @@ void UartLoaderWorker::slotWriteLoader()
                     {
                       qDebug() << "slotWriteLoader: transmit error (3)";
                       emit signalLoaderWrited(false);
-                      emit signalWriteLog(tr("Write bootloader failed: transmit errorr"));
+                      emit signalWriteLog(tr("Write bootloader failed: transmit error"));
                       m_serialPort->close();
                       return;
                     }
@@ -278,10 +283,20 @@ void UartLoaderWorker::slotWriteLoader()
       // restart, run loader from RAM
       writeBuf.clear();
       writeBuf.append('R');
-      writeBuf.append(static_cast<char>(m_ramBuf[m_ramStartOffset + 4] & 0xfe));
-      writeBuf.append(static_cast<char>(m_ramBuf[m_ramStartOffset + 5]));
-      writeBuf.append(static_cast<char>(m_ramBuf[m_ramStartOffset + 6]));
-      writeBuf.append(static_cast<char>(m_ramBuf[m_ramStartOffset + 7]));
+      switch (mcuType) {
+        case Type1986VE1T:
+          writeBuf.append(static_cast<char>(m_ramBuf[m_ramStartOffset + 4] & 0xfe));
+          writeBuf.append(static_cast<char>(m_ramBuf[m_ramStartOffset + 5]));
+          writeBuf.append(static_cast<char>(m_ramBuf[m_ramStartOffset + 6]));
+          writeBuf.append(static_cast<char>(m_ramBuf[m_ramStartOffset + 7]));
+          break;
+        case Type1986VE9x:
+          writeBuf.append(static_cast<char>(startAddress & 0xff));
+          writeBuf.append(static_cast<char>((startAddress >> 8) & 0xff));
+          writeBuf.append(static_cast<char>((startAddress >> 16) & 0xff));
+          writeBuf.append(static_cast<char>((startAddress >> 24) & 0xff));
+          break;
+        }
       m_serialPort->write(writeBuf);
       m_serialPort->flush();
 
@@ -389,7 +404,7 @@ void UartLoaderWorker::slotEraseFlash()
           (static_cast<quint8>(readBuf.at(7)) << 16) +
           (static_cast<quint8>(readBuf.at(8)) << 24));
 
-      if ((address == 0x000020000) && (data == 0xffffffff))
+      if ((address == (m_flashStartAddress + MAX_CODE_SIZE)) && (data == 0xffffffff))
         {
           qDebug() << "Full chip erase done!";
           emit signalFlashErased(true);
@@ -401,7 +416,7 @@ void UartLoaderWorker::slotEraseFlash()
       qDebug() << "Full chip erase failed adress=" << QString::number(address, 16)
                << " data=" << QString::number(data, 16);
       emit signalFlashErased(false);
-      emit signalWriteLog("Chip erase failed: adress=" + QString::number(address, 16) +
+      emit signalWriteLog("Chip erase failed: address=" + QString::number(address, 16) +
                           " data=" + QString::number(data, 16));
       m_serialPort->close();
       return;
@@ -454,16 +469,20 @@ void UartLoaderWorker::slotWriteFlash(QString path)
       // set address
       QByteArray writeBuf;
       writeBuf.append('A');
-      writeBuf.append(static_cast<char>(0x00));
-      writeBuf.append(static_cast<char>(0x00));
-      writeBuf.append(static_cast<char>(0x00));
-      writeBuf.append(static_cast<char>(0x00));
+      writeBuf.append(static_cast<char>(m_flashStartAddress));
+      writeBuf.append(static_cast<char>(m_flashStartAddress >> 8));
+      writeBuf.append(static_cast<char>(m_flashStartAddress >> 16));
+      writeBuf.append(static_cast<char>(m_flashStartAddress >> 24));
       m_serialPort->write(writeBuf);
       m_serialPort->flush();
 
       QByteArray readBuf;
       readBuf = readSerialData(1, 1000);
-      if (readBuf.length() != 1 || (readBuf.at(0) != 0x00))
+      char crc = static_cast<char>(m_flashStartAddress) +
+          static_cast<char>(m_flashStartAddress >> 8) +
+          static_cast<char>(m_flashStartAddress >> 16) +
+          static_cast<char>(m_flashStartAddress >> 24);
+      if (readBuf.length() != 1 || (readBuf.at(0) != crc))
         {
           qDebug() << "slotWriteCode: error (1) - transmit error";
           emit signalFlashWrited(false);
@@ -535,7 +554,7 @@ void UartLoaderWorker::slotVerifyFlash(QString path)
         {
           qDebug() << m_lastError;
           emit signalFlashVerified(false);
-          emit signalWriteLog(tr("Can't open programm hex file. ") + m_lastError);
+          emit signalWriteLog(tr("Can't open programm hex file.\n") + m_lastError);
           return;
         }
 
@@ -553,16 +572,20 @@ void UartLoaderWorker::slotVerifyFlash(QString path)
       // set address
       QByteArray writeBuf;
       writeBuf.append('A');
-      writeBuf.append(static_cast<char>(0x00));
-      writeBuf.append(static_cast<char>(0x00));
-      writeBuf.append(static_cast<char>(0x00));
-      writeBuf.append(static_cast<char>(0x00));
+      writeBuf.append(static_cast<char>(m_flashStartAddress));
+      writeBuf.append(static_cast<char>(m_flashStartAddress >> 8));
+      writeBuf.append(static_cast<char>(m_flashStartAddress >> 16));
+      writeBuf.append(static_cast<char>(m_flashStartAddress >> 24));
       m_serialPort->write(writeBuf);
       m_serialPort->flush();
 
       QByteArray readBuf;
       readBuf = readSerialData(1, 1000);
-      if (readBuf.size() != 1 || (readBuf.at(0) != 0x00))
+      char crc = static_cast<char>(m_flashStartAddress) +
+          static_cast<char>(m_flashStartAddress >> 8) +
+          static_cast<char>(m_flashStartAddress >> 16) +
+          static_cast<char>(m_flashStartAddress >> 24);
+      if (readBuf.size() != 1 || (readBuf.at(0) != crc))
         {
           qDebug() << "slotVerify: error (1) - transmit error";
           emit signalFlashVerified(false);
@@ -601,10 +624,10 @@ void UartLoaderWorker::slotVerifyFlash(QString path)
                                << " datar="
                                << QString::number(readBuf.at(static_cast<int>(k)), 16);
                       emit signalFlashVerified(false);
-                      emit signalWriteLog(tr("Verify programm failed adress=%1 dataw=%2 datar=%3")
-                                          .arg(k + (j << 3) + (i << 8), 16)
-                                          .arg(m_flashBuf[k + (j << 3) + (i << 8)], 16)
-                                          .arg(readBuf.at(static_cast<int>(k)), 16));
+                      emit signalWriteLog(tr("Verify programm failed. Adress=%1, DataW=%2, DataR=%3")
+                                          .arg(k + (j << 3) + (i << 8), 0, 16)
+                                          .arg(m_flashBuf[k + (j << 3) + (i << 8)], 0, 16)
+                                          .arg(static_cast<uint>(readBuf.at(static_cast<int>(k))), 0, 16));
                       m_serialPort->close();
                       return;
                     }
@@ -789,15 +812,29 @@ bool UartLoaderWorker::loadHexCode(QString path)
       if(noteType == 0)  // binary data
         {
           quint32 address = lbaAddr + sbaAddr +offset;
-          if ((address + static_cast<quint32>(bLength)) > MAX_CODE_SIZE)
+          if (address < m_flashStartAddress)
             {
-              m_lastError = tr("Address map very big");
+              m_lastError = tr("Address is not in mcu memory map\n");
+              m_lastError.append(tr("Address: %1 less then %2").arg(address)
+                                 .arg(m_flashStartAddress));
               file.close();
               return false;
             }
 
+          quint32 entryMaxAddress = address + static_cast<quint32>(bLength);
+          quint32 flashMaxAddress = m_flashStartAddress + MAX_CODE_SIZE;
+          if (entryMaxAddress > flashMaxAddress)
+            {
+              m_lastError = tr("Address is not in mcu memory map\n");
+              m_lastError.append(tr("Address: %1 more then %2")
+                                 .arg(entryMaxAddress).arg(flashMaxAddress));
+              file.close();
+              return false;
+            }
+
+          quint32 bufAddress = address - m_flashStartAddress;
           for (int i = 0; i < bLength; i++)
-            m_flashBuf[address + static_cast<quint32>(i)] = data_buf[i];
+            m_flashBuf[bufAddress + static_cast<quint32>(i)] = data_buf[i];
           continue;
         }
 
@@ -940,8 +977,9 @@ bool UartLoaderWorker::loadHexLoader(QString path)
       if(noteType == 0)  // binary data
         {
           quint32 address = lbaAddr + sbaAddr + offset;
-          quint32 ramBufAddress = address - m_ramStartAddress;
-          if ((ramBufAddress + static_cast<quint32>(bLength)) > MAX_RAM_SIZE)
+
+          quint32 bufAddress = address - m_ramStartAddress;
+          if ((bufAddress + static_cast<quint32>(bLength)) > MAX_RAM_SIZE)
             {
               m_lastError = tr("Loader address not in ram");
               file.close();
@@ -949,7 +987,7 @@ bool UartLoaderWorker::loadHexLoader(QString path)
             }
 
           for (int i = 0; i < bLength; i++)
-            m_ramBuf[ramBufAddress + static_cast<quint32>(i)] = data_buf[i];
+            m_ramBuf[bufAddress + static_cast<quint32>(i)] = data_buf[i];
           continue;
         }
 
@@ -1040,7 +1078,7 @@ void UartLoaderWorker::identifyOfMode()
       m_serialPort->write(writeBuf);
       m_serialPort->flush();
       readBuf = readSerialData(3, 100);
-      if (readBuf.length() == 3 &&
+      if (readBuf.length() >= 3 &&
           readBuf.at(0) == 0x0d &&
           readBuf.at(1) == 0x0a &&
           readBuf.at(2) == 0x3e)
@@ -1070,7 +1108,7 @@ void UartLoaderWorker::identifyOfMode()
           m_serialPort->write(writeBuf);
           m_serialPort->flush();
           readBuf = readSerialData(3, 1000);
-          if (readBuf.length() == 3 &&
+          if (readBuf.length() >= 3 &&
               readBuf.at(0) == 0x0d &&
               readBuf.at(1) == 0x0a &&
               readBuf.at(2) == 0x3e)
@@ -1103,10 +1141,36 @@ void UartLoaderWorker::identifyOfMode()
 
           readBuf = readSerialData(1, 1000);
 
-          if (readBuf.length() < 1 ||
-              readBuf.at(0) != 'B')
+          /* При работе с 1986ве92 не возвращался код 'B', поэтому проверяем
+           * коннект запросом приглашения. Так универсальнее.
+           */
+          m_serialPort->close();
+          m_serialPort->setBaudRate(m_baud);
+          if (!m_serialPort->open(QIODevice::ReadWrite))
             {
-              qDebug() << "identifyOfMode, set baud: transmit error";
+              qDebug() << "identifyOfMode, baud test: port not opened";
+              emit signalWriteLog(tr("Port %1 not opened").arg(m_portName));
+              mode = None;
+              return;
+            }
+
+          writeBuf.clear();
+          writeBuf.append(0x0d);
+          m_serialPort->write(writeBuf);
+          m_serialPort->flush();
+          readBuf = readSerialData(3, 1000);
+          if (readBuf.length() >= 3 &&
+              readBuf.at(0) == 0x0d &&
+              readBuf.at(1) == 0x0a &&
+              readBuf.at(2) == 0x3e)
+            {
+              qDebug() << "Set baud done";
+              emit signalWriteLog(tr("Set baud done"));
+            }
+          else
+            {
+              qDebug() << "Set baud failed";
+              m_serialPort->close();
               emit signalWriteLog(tr("Set baud failed"));
               m_serialPort->close();
               mode = None;

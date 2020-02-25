@@ -49,6 +49,11 @@ private:
     QByteArray m_answerData;
     QByteArray m_inputCache;
 
+    enum {
+      Type1986VE1T,
+      Type1986VE9x
+    } m_mcuType;
+
 };
 
 #endif // QSERIALPORT_H

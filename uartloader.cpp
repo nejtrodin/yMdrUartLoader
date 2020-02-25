@@ -12,7 +12,7 @@ UartLoader::UartLoader(QObject *parent)
   QThread *thread = new QThread;
   UartLoaderWorker *worker = new UartLoaderWorker;
   worker->moveToThread(thread);
-  connect(this, &UartLoader::signalSetPortSettins, worker, &UartLoaderWorker::slotSetPortSettings);
+  connect(this, &UartLoader::signalSetSettins, worker, &UartLoaderWorker::slotSetSettings);
   connect(worker, &UartLoaderWorker::signalWriteLog, this, &UartLoader::signalWriteLog);
   connect(this, &UartLoader::signalGetRevision, worker, &UartLoaderWorker::slotGetRevision);
   connect(worker, &UartLoaderWorker::signalRevision, this, &UartLoader::signalRevision);
@@ -30,9 +30,9 @@ UartLoader::UartLoader(QObject *parent)
 }
 
 
-void UartLoader::setPortSettings(QString portName, qint32 baud)
+void UartLoader::setSettings(QString mcuType, QString portName, qint32 baud)
 {
-  emit signalSetPortSettins(portName, baud);
+  emit signalSetSettins(mcuType, portName, baud);
 }
 
 

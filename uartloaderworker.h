@@ -17,7 +17,7 @@ public:
   UartLoaderWorker(QObject *parent = Q_NULLPTR);
 
 public slots:
-  void slotSetPortSettings(QString portName, qint32 baud);
+  void slotSetSettings(QString strMcuType, QString portName, qint32 baud);
   void slotGetRevision();
   void slotWriteLoader();
   void slotEraseFlash();
