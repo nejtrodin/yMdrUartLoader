@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>testFiles/1986ve1bootuart.bin</file>
+        <file>testFiles/1986ve1t_test.bin</file>
+        <file>testFiles/1986ve1t_test.hex</file>
+    </qresource>
+</RCC>
