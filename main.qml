@@ -7,7 +7,6 @@ import Qt.labs.platform 1.0
 import com.mycompany.loader 1.0
 import Qt.labs.settings 1.0
 
-
 Window {
     visible: true
     id: mainWindow
@@ -605,7 +604,10 @@ Window {
         nameFilters: [ qsTr("Hex files (*.hex)"), qsTr("All files (*)")]
 
         onAccepted: {
-            pathEdit.text = openDialog.file.toString().replace("file://", "")
+            if (Qt.platform.os == "windows")
+                pathEdit.text = openDialog.file.toString().replace("file:///", "")
+            else
+                pathEdit.text = openDialog.file.toString().replace("file://", "")
         }
     }
 
