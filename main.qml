@@ -1,6 +1,7 @@
-import QtQuick 2.6
-import QtQuick.Window 2.2
-import QtQuick.Controls 2.2
+import QtQuick 2.12
+import QtQuick.Window 2.12
+import QtQuick.Controls 2.12
+import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.3
 //import QtQuick.Dialogs 1.2
 import Qt.labs.platform 1.0
@@ -12,11 +13,14 @@ Window {
     id: mainWindow
     width: 600
     height: 700
+    color: Material.background
 
-    property color buttonActiveColor: 'yellow'
-    property color buttonSuccessColor: 'green'
-    property color buttonErrorColor: 'red'
-    property color buttonDefaultColor: 'silver'
+    property color buttonActiveColor: Material.accent
+    property color buttonSuccessColor: Material.color(Material.Green)
+    property color buttonErrorColor: Material.color(Material.Red)
+    property color buttonDefaultColor: Material.theme == Material.Dark ?
+                                           Qt.lighter(Material.background, 1.5) :
+                                           Qt.darker(Material.background, 1.2)
 
     Timer {
         id: scanDeviceTimer
@@ -309,7 +313,11 @@ Window {
                 id: getRevButton
                 property color backColor: buttonDefaultColor
                 text: qsTr("Get Revision")
+                font.capitalization: Font.MixedCase
                 Layout.fillWidth: true
+                Material.elevation: 2
+                Material.background: backColor
+
                 onClicked: {
                     if (!startFlag) {
                         logTextArea.append(Qt.formatDateTime(new Date(), "* hh:mm:ss") +
@@ -321,15 +329,6 @@ Window {
                                            portBaudItems.get(portBaudComboBox.currentIndex).value)
                         loader.getRevision()
                     }
-                }
-
-                background: Rectangle {
-                    implicitWidth: 90
-                    implicitHeight: 30
-                    opacity: enabled ? 1 : 0.3
-                    border.width: 2
-                    color: getRevButton.backColor
-                    radius: 4
                 }
             }
             spacing: 10
@@ -345,7 +344,11 @@ Window {
                 id: writeLoaderButton
                 property color backColor: buttonDefaultColor
                 text: qsTr("Write Bootloader")
+                font.capitalization: Font.MixedCase
                 Layout.fillWidth: true
+                Material.elevation: 2
+                Material.background: backColor
+
                 onClicked: {
                     if (!startFlag) {
                         logTextArea.append(Qt.formatDateTime(new Date(), "* hh:mm:ss") +
@@ -357,15 +360,6 @@ Window {
                                            portBaudItems.get(portBaudComboBox.currentIndex).value)
                         loader.writeLoader()
                     }
-                }
-
-                background: Rectangle {
-                    implicitWidth: 90
-                    implicitHeight: 30
-                    opacity: enabled ? 1 : 0.3
-                    border.width: 2
-                    color: writeLoaderButton.backColor
-                    radius: 4
                 }
             }
             spacing: 10
@@ -381,7 +375,11 @@ Window {
                 id: eraseButton
                 property color backColor: buttonDefaultColor
                 text: qsTr("Erase flash")
+                font.capitalization: Font.MixedCase
                 Layout.fillWidth: true
+                Material.elevation: 2
+                Material.background: backColor
+
                 onClicked: {
                     if (!startFlag) {
                         logTextArea.append(Qt.formatDateTime(new Date(), "* hh:mm:ss") +
@@ -393,15 +391,6 @@ Window {
                                            portBaudItems.get(portBaudComboBox.currentIndex).value)
                         loader.eraseFlash()
                     }
-                }
-
-                background: Rectangle {
-                    implicitWidth: 90
-                    implicitHeight: 30
-                    opacity: enabled ? 1 : 0.3
-                    border.width: 2
-                    color: eraseButton.backColor
-                    radius: 4
                 }
             }
             spacing: 10
@@ -417,7 +406,11 @@ Window {
                 id: writeCodeButton
                 property color backColor: buttonDefaultColor
                 text: qsTr("Write code")
+                font.capitalization: Font.MixedCase
                 Layout.fillWidth: true
+                Material.elevation: 2
+                Material.background: backColor
+
                 onClicked: {
                     if (!startFlag) {
                         logTextArea.append(Qt.formatDateTime(new Date(), "* hh:mm:ss") +
@@ -434,15 +427,6 @@ Window {
                         loader.writeFlash(pathEdit.text)
                     }
                 }
-
-                background: Rectangle {
-                    implicitWidth: 90
-                    implicitHeight: 30
-                    opacity: enabled ? 1 : 0.3
-                    border.width: 2
-                    color: writeCodeButton.backColor
-                    radius: 4
-                }
             }
             spacing: 10
         }
@@ -456,7 +440,11 @@ Window {
                 id: verifyButton
                 property color backColor: buttonDefaultColor
                 text: qsTr("Verify code")
+                font.capitalization: Font.MixedCase
                 Layout.fillWidth: true
+                Material.elevation: 2
+                Material.background: backColor
+
                 onClicked: {
                     if (!startFlag) {
                         logTextArea.append(Qt.formatDateTime(new Date(), "* hh:mm:ss") +
@@ -473,15 +461,6 @@ Window {
                         loader.verifyFlash(pathEdit.text)
                     }
                 }
-
-                background: Rectangle {
-                    implicitWidth: 90
-                    implicitHeight: 30
-                    opacity: enabled ? 1 : 0.3
-                    border.width: 2
-                    color: verifyButton.backColor
-                    radius: 4
-                }
             }
             spacing: 10
         }
@@ -495,7 +474,11 @@ Window {
                 id: runCodeButton
                 property color backColor: buttonDefaultColor
                 text: qsTr("Run MCU")
+                font.capitalization: Font.MixedCase
                 Layout.fillWidth: true
+                Material.elevation: 2
+                Material.background: backColor
+
                 onClicked: {
                     if (!startFlag) {
                         logTextArea.append(Qt.formatDateTime(new Date(), "* hh:mm:ss") +
@@ -508,15 +491,6 @@ Window {
                         loader.runMcu()
                     }
                 }
-
-                background: Rectangle {
-                    implicitWidth: 90
-                    implicitHeight: 30
-                    opacity: enabled ? 1 : 0.3
-                    border.width: 2
-                    color: runCodeButton.backColor
-                    radius: 4
-                }
             }
             spacing: 10
         }
@@ -525,7 +499,11 @@ Window {
             id: startButton
             property color backColor: buttonDefaultColor
             text: qsTr("Start")
+            font.capitalization: Font.MixedCase
             Layout.fillWidth: true
+            Material.elevation: 10
+            Material.background: backColor
+
             onClicked: {
                 logTextArea.append(Qt.formatDateTime(new Date(), "* hh:mm:ss") +
                                    " - Start");
@@ -536,15 +514,6 @@ Window {
                     return
                 }
                 mainWindow.startButtonClicked()
-            }
-
-            background: Rectangle {
-                implicitWidth: 90
-                implicitHeight: 30
-                opacity: enabled ? 1 : 0.3
-                border.width: 2
-                color: startButton.backColor
-                radius: 4
             }
         }
 
@@ -579,21 +548,6 @@ Window {
         anchors.fill: parent
     }  // ColumnLayout - main Layout
 
-    // QML File Dialogs
-//    FileDialog {
-//        id: openDialog
-//        title: qsTr("Please choose a hex file")
-//        folder: shortcuts.home
-//        nameFilters: [ "Hex files (*.hex)", "All files (*)" ]
-//        selectMultiple: false
-//        selectExisting: true
-//        onAccepted: {
-//            pathEdit.text = openDialog.fileUrl.toString().replace("file://", "")
-//        }
-//        onRejected: {
-//            console.log("Canceled")
-//        }
-//    }
 
     // Native File Dialogs
     FileDialog {
