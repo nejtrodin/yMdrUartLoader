@@ -15,6 +15,9 @@
 int main(int argc, char *argv[])
 {
   QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+  QCoreApplication::setOrganizationName("svdSoft");
+  QCoreApplication::setOrganizationDomain("svdSoft.com");
+  QCoreApplication::setApplicationName("yMdrUartLoader");
 
 //  QGuiApplication app(argc, argv);  // for qml dialogs
   QApplication app(argc, argv);  // for native file dialogs

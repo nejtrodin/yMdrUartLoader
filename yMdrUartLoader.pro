@@ -18,6 +18,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+# for Windows
+VERSION = 0.0.0.1
+QMAKE_TARGET_COMPANY = svdSoft
+QMAKE_TARGET_PRODUCT = $${TARGET}
+QMAKE_TARGET_DESCRIPTION = $${TARGET}
+QMAKE_TARGET_COPYRIGHT = (c) Vyasheslav Sinishenko
+RC_ICONS = images/$${TARGET}.ico
+
 SOURCES += main.cpp \
     uartloader.cpp \
     uartloaderworker.cpp \
