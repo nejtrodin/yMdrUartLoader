@@ -23,7 +23,7 @@ UartLoaderWorker::UartLoaderWorker(QObject *parent) : QObject(parent)
   m_flashStartAddress = MDR1T_FLASH_START_ADDRESS;
   m_ramStartAddress = MDR1T_RAM_START_ADDRESS;
 
-  m_serialPort = new QSerialPort;
+  m_serialPort = new QSerialPort(this);
 }
 
 void UartLoaderWorker::slotSetSettings(QString strMcuType, QString portName, qint32 baud)
