@@ -2,6 +2,7 @@ QT += quick
 QT += quickcontrols2
 QT += serialport
 QT += widgets
+QT += svg
 
 TARGET = yMdrUartLoader
 
