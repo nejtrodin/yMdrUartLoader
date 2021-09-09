@@ -3,7 +3,6 @@ import QtQuick.Window 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.3
-//import QtQuick.Dialogs 1.2
 import Qt.labs.platform 1.0
 import com.mycompany.loader 1.0
 import Qt.labs.settings 1.0
@@ -574,11 +573,13 @@ Window {
 
         onAccepted: {
             if (saveLogDialog.file != "") {
-                fileIoHelper.writeTextFile(saveLogDialog.file.toString().replace("file://", ""),
-                                           logTextArea.text);
+                if (Qt.platform.os == "windows")
+                    fileIoHelper.writeTextFile(saveLogDialog.file.toString().replace("file:///", ""),
+                                               logTextArea.text);
+                else
+                    fileIoHelper.writeTextFile(saveLogDialog.file.toString().replace("file://", ""),
+                                               logTextArea.text);
             }
         }
     }
-
-
-}
+}  // Window
