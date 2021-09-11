@@ -500,7 +500,7 @@ Window {
             text: qsTr("Start")
             font.capitalization: Font.MixedCase
             Layout.fillWidth: true
-            Material.elevation: 10
+            Material.elevation: 2
             Material.background: backColor
 
             onClicked: {

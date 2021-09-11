@@ -3,6 +3,7 @@
 #include <QQmlApplicationEngine>
 #include <QQuickItem>
 #include <QQuickView>
+#include <QQuickStyle>
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QThread>
@@ -18,6 +19,8 @@ int main(int argc, char *argv[])
   QCoreApplication::setOrganizationName("svdSoft");
   QCoreApplication::setOrganizationDomain("svdSoft.com");
   QCoreApplication::setApplicationName("yMdrUartLoader");
+
+  QQuickStyle::setStyle("Material");
 
 //  QGuiApplication app(argc, argv);  // for qml dialogs
   QApplication app(argc, argv);  // for native file dialogs
